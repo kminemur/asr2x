@@ -1,29 +1,16 @@
 # ASR2X
 
-`OpenVINO/whisper-large-v3-int4-ov` を使って音声を文字起こしし、結果をクリップボードへコピーできる Windows デスクトップアプリです。
+Windows で動く、CLI 専用の音声文字起こしツールです。`OpenVINO/whisper-large-v3-int4-ov` を使ってマイク入力を文字起こしし、結果を標準出力またはテキストファイルへ出力します。
 
-## 概要
+## 特徴
 
-- マイクから 16kHz / モノラルで録音
-- `OpenVINO/whisper-large-v3-int4-ov` で文字起こし
-- 認識結果を画面に表示
-- 認識結果をクリップボードへコピー
-- 自動コピー有効時は認識完了後にそのままコピー
-- 他アプリへ `Ctrl + V` で貼り付け可能
-
-## モデル保存先
-
-モデルは `app.py` と同じディレクトリ配下の `models/whisper-large-v3-int4-ov` に保存されます。
-
-## デバイス選択
-
-OpenVINO の利用可能デバイスを確認し、以下の優先順で推論デバイスを自動選択します。
-
-1. `NPU`
-2. `GPU`
-3. `CPU`
-
-NPU があれば NPU、なければ GPU、どちらも使えなければ CPU で動作します。
+- GUI なしの CLI 専用実装
+- 16kHz / モノラルでマイク録音
+- `OpenVINO/whisper-large-v3-int4-ov` を自動ダウンロード
+- OpenVINO デバイスは `NPU -> GPU -> CPU` の順で選択
+- 端末操作で録音開始 / 停止
+- 固定秒数録音 (`--duration`) に対応
+- 文字起こし結果をファイル保存 (`--output`) 可能
 
 ## セットアップ
 
@@ -32,29 +19,54 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-python app.py
 ```
-
-初回起動時または初回認識時に、Hugging Face からモデルを自動ダウンロードします。
 
 ## 使い方
 
-1. `Start Recording` を押して話す
-2. `Stop Recording` を押して認識を開始する
-3. 認識完了後、必要に応じて `Copy Text` を押す
-4. 他アプリで `Ctrl + V` を押して貼り付ける
+対話モード:
 
-`Auto copy after recognition` が有効なら、認識完了後に自動でクリップボードへコピーされます。
+```powershell
+python app.py
+```
 
-## UI の挙動
+1. Enter で録音開始
+2. もう一度 Enter で録音停止
+3. 文字起こし結果が標準出力に表示される
 
-- 録音中は録音経過時間を表示します
-- モデルダウンロード中、モデルロード中、認識中はステータスを表示します
-- 重い処理の間は録音ボタンとコピーボタンを一時的に無効化します
-- 初回のモデルロードは数十秒から数分かかることがあります
+固定秒数録音:
+
+```powershell
+python app.py --duration 5
+```
+
+ファイルへ保存:
+
+```powershell
+python app.py --duration 5 --output result.txt
+```
+
+OpenVINO デバイス指定:
+
+```powershell
+python app.py --device GPU
+```
+
+利用可能なデバイス確認:
+
+```powershell
+python app.py --list-openvino-devices
+python app.py --list-audio-devices
+```
+
+## 動作仕様
+
+- モデルは初回実行時に [`models/whisper-large-v3-int4-ov`](C:/Users/Intel/projects/asr2x/models/whisper-large-v3-int4-ov) へ保存されます
+- モデルロード中や認識中の進捗は標準エラー出力へ表示します
+- 文字起こし結果そのものは標準出力へ表示するため、リダイレクトやパイプで扱えます
+- `--device` 未指定時は `NPU -> GPU -> CPU` の順で利用可能なデバイスを試します
 
 ## 注意
 
 - Windows のマイク権限が必要です
-- large-v3 モデルはサイズが大きく、初回ダウンロードと初回ロードに時間がかかります
-- Hugging Face を未認証で使うとレート制限が低くなることがあります
+- 初回はモデルのダウンロードとロードに時間がかかります
+- Hugging Face からモデルを取得するためネットワーク接続が必要です
