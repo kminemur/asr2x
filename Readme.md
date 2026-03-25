@@ -1,6 +1,6 @@
 # ASR2X
 
-`onnx-community/whisper-large-v3-ONNX` を初回実行時にダウンロードし、OpenVINO IR に変換して使う CLI 音声認識アプリです。変換後は `openvino_genai.WhisperPipeline` で推論します。
+`onnx-community/whisper-large-v3-ONNX` を初回実行時にダウンロードし、OpenVINO IR に変換して使う CLI 音声認識アプリです。変換と推論は Optimum Intel の `OVModelForSpeechSeq2Seq` を使います。
 
 ## 特徴
 
