@@ -71,7 +71,7 @@ Windows で動作する CLI 専用の音声文字起こしアプリを作る。
 
 - `openvino.Core().available_devices` で OpenVINO デバイスを確認する
 - デフォルト優先順は `GPU -> CPU`
-- `--device` には `auto`, `NPU`, `GPU`, `CPU` を受け付ける
+- `--device` には `auto`, `GPU`, `CPU` を受け付ける
 - `preferred_device` が指定され、かつ利用可能ならそのデバイスを先頭にする
 - 指定デバイスが利用不可なら例外を出す
 
