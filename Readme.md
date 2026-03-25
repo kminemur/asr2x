@@ -1,16 +1,16 @@
 # ASR2X
 
-Windows で動く、CLI 専用の音声文字起こしツールです。`OpenVINO/whisper-large-v3-int4-ov` を使ってマイク入力を文字起こしし、結果を標準出力またはテキストファイルへ出力します。
+`onnx-community/whisper-large-v3-ONNX` を初回実行時にダウンロードし、OpenVINO IR に変換して使う CLI 音声認識アプリです。変換後は `openvino_genai.WhisperPipeline` で推論します。
 
 ## 特徴
 
-- GUI なしの CLI 専用実装
-- 16kHz / モノラルでマイク録音
-- `OpenVINO/whisper-large-v3-int4-ov` を自動ダウンロード
+- Hugging Face の `onnx-community/whisper-large-v3-ONNX` を利用
+- ONNX から OpenVINO IR (`.xml` / `.bin`) を自動生成
+- CLI だけで録音と文字起こしを実行
+- 16kHz モノラルのマイク入力に対応
+- 16kHz WAV ファイルの文字起こしにも対応
 - OpenVINO デバイスは `NPU -> GPU -> CPU` の順で選択
-- 端末操作で録音開始 / 停止
-- 固定秒数録音 (`--duration`) に対応
-- 文字起こし結果をファイル保存 (`--output`) 可能
+- 初回変換後はローカルの IR を再利用
 
 ## セットアップ
 
@@ -23,50 +23,62 @@ pip install -r requirements.txt
 
 ## 使い方
 
-対話モード:
+初回にモデルだけ準備:
+
+```powershell
+python app.py --prepare-model-only
+```
+
+マイクを対話モードで使う:
 
 ```powershell
 python app.py
 ```
 
-1. Enter で録音開始
-2. もう一度 Enter で録音停止
-3. 文字起こし結果が標準出力に表示される
-
-固定秒数録音:
+固定秒数だけ録音:
 
 ```powershell
 python app.py --duration 5
 ```
 
-ファイルへ保存:
+WAV ファイルを文字起こし:
+
+```powershell
+python app.py --audio-file sample.wav
+```
+
+結果をファイルへ保存:
 
 ```powershell
 python app.py --duration 5 --output result.txt
 ```
 
-OpenVINO デバイス指定:
+OpenVINO デバイスを明示:
 
 ```powershell
 python app.py --device GPU
 ```
 
-利用可能なデバイス確認:
+利用可能デバイスの確認:
 
 ```powershell
 python app.py --list-openvino-devices
 python app.py --list-audio-devices
 ```
 
-## 動作仕様
+再変換:
 
-- モデルは初回実行時に [`models/whisper-large-v3-int4-ov`](C:/Users/Intel/projects/asr2x/models/whisper-large-v3-int4-ov) へ保存されます
-- モデルロード中や認識中の進捗は標準エラー出力へ表示します
-- 文字起こし結果そのものは標準出力へ表示するため、リダイレクトやパイプで扱えます
-- `--device` 未指定時は `NPU -> GPU -> CPU` の順で利用可能なデバイスを試します
+```powershell
+python app.py --prepare-model-only --force-reconvert
+```
+
+## 出力先
+
+- 変換済み OpenVINO モデル: `models/whisper-large-v3-onnx-ov`
+- ダウンロードした ONNX 元データ: `models/whisper-large-v3-onnx-ov/source`
 
 ## 注意
 
-- Windows のマイク権限が必要です
-- 初回はモデルのダウンロードとロードに時間がかかります
-- Hugging Face からモデルを取得するためネットワーク接続が必要です
+- 初回のダウンロードと変換はかなり時間とディスク容量を使います
+- `--audio-file` は 16kHz WAV を前提にしています
+- マイク入力には Windows のマイク権限が必要です
